@@ -44,7 +44,7 @@ ui <- fluidPage(
   #add panel for PFP
   fluidRow(column(4,
                   wellPanel(strong("Sample size planning"), p(),
-                            numericInput("tMOE", "Target MOE:", value=0.5),
+                            numericInput("tMOE", "Target MOE:", value=0.5, min = .01),
                             numericInput("assu", "Assurance:", value=.80, min = 0, max=.99),
                             actionButton("plan", "Get sample sizes")
                             
