@@ -18,23 +18,24 @@ ui <- fluidPage(
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
-         sliderInput("mean",
-                     "Set population mean:",
-                     min = 50,
-                     max = 150,
-                     value = 100),
-         sliderInput("sd",
+        numericInput("mu1", 
+                     "Mean population 1:", 
+                     100,
+                     min = 1,
+                     max = 1000),
+         numericInput("mu2",
+                     "Mean population 2:",
+                     100,
+                     min = 1,
+                     max = 1000),
+         numericInput("sd",
                      "Set population sd:",
                      min = 5,
                      max = 25,
                      value=15),
-         sliderInput("n",
-                     "Set sample size:",
-                     min = 2,
-                     max = 500,
-                     value = 100)
-      ),
-      
+        actionButton("draw", "Draw Populations")
+               ),
+        
       
       # Show a plot of the generated distribution
       mainPanel(
@@ -45,13 +46,22 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-   
-   output$distPlot <- renderPlot({
-      # generate bins based on input$bins from ui.R
-      x    <- rnorm(input$n, input$mean, input$sd)
-            # draw the histogram with the specified number of bins
-      plot(density(x))
+   observeEvent(input$draw, {
+     mu1 <- isolate(input$mu1)
+     mu2 <- isolate(input$mu2)
+     sd <- isolate(input$sd)
+     x <- seq(-4*sd+mu1, 4*sd+mu2, length=200)
+     output$distPlot <- renderPlot({
+       plot(x, dnorm(x, mu1, sd), type="l")
+       points(x, dnorm(x, mu2, sd), type="l", lty=3)
+     })
    })
+   # output$distPlot <- renderPlot({
+   #    # generate bins based on input$bins from ui.R
+   #    x    <- seq()
+   #          # draw the histogram with the specified number of bins
+   #    plot(density(x))
+   # })
 }
 
 # Run the application 
