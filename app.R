@@ -49,12 +49,21 @@ ui <- fluidPage(
                             actionButton("plan", "Get sample sizes")
                             
                   ) #end panel
-  ) #end first column 
-  
+  ), #end first column 
+  column(8, verbatimTextOutput(
+    "ans"
+  )) # end column
   ) #end second fluidRow
 ) #end fluidPage
 
+
+
+
+#define functions
+
+
 # Define server logic 
+
 server <- function(input, output) {
   observeEvent(input$draw, {
     mu1 <- isolate(input$mu1)
@@ -64,10 +73,22 @@ server <- function(input, output) {
     output$distPlot <- renderPlot({
       plot(x, dnorm(x, mu1, sd), type="l", main="Populations")
       points(x, dnorm(x, mu2, sd), type="l", lty=3)
-    })
-  })
+    }) #end renderPlot
+  }) #end observeEvent
   
-}
+  observeEvent(input$plan, {
+    mu1 <- isolate(input$mu1)
+    mu2 <- isolate(input$mu2)
+    sd <- isolate(input$sd)
+    tMOE <- isolate(input$tMOE)
+    assu <- isolate(input$assu)
+    
+    output$ans <- "BLABLABLA"
+  }) #end observeEvent2 
+    
+  }# end server
+  
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
