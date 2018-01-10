@@ -55,10 +55,22 @@ ui <- fluidPage(
   ) #end second fluidRow
 ) #end fluidPage
 
+#define planning functions
 
+#Margin of Error
+calcMOE <- function(n, sd) {
+  df = 2*n - 2
+  se = sqrt(2*sd^2/n)
+  moe = qt(.975, df)*se
+}
 
-
-#define functions
+#Margin of Error with assurance 
+calcMOE.assu <- function(n, sd, assu) {
+  df = 2*n - 2
+  sd.assu = sqrt(sd^2*qchisq(assu, df)/df)
+  se.assu = sqrt(2*sd.assu^2/n)
+  moe.assu = qt(.975, df)*se.assu
+} 
 
 
 # Define server logic 
@@ -79,9 +91,15 @@ server <- function(input, output) {
     mu1 <- isolate(input$mu1)
     mu2 <- isolate(input$mu2)
     sd <- isolate(input$sd)
-    tMOE <- isolate(input$tMOE)
+    tMOE <- isolate(input$tMOE) 
     assu <- isolate(input$assu)
-    answer = "Whaaaat??"
+    
+    tMOE = tMOE*sd #not a fraction of sd as in input
+    
+    cost = function(n, tMOE) {
+      cost = (calcMOE.assu(n, sd = sd, assu=assu) - tMOE)^2
+    }
+    answer = c(optimize(cost, interval=c(20, 5000), tMOE=tMOE)$minimum, tMOE, (1.96/.5)^2*2)
     output$ans <- renderPrint(answer)
   
     }) #end observeEvent2 
