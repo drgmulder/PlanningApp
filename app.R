@@ -50,9 +50,8 @@ ui <- fluidPage(
                             
                   ) #end panel
   ), #end first column 
-  column(8, verbatimTextOutput(
-    "ans"
-  )) # end column
+  column(8, verbatimTextOutput("ans")
+  ) # end column
   ) #end second fluidRow
 ) #end fluidPage
 
@@ -82,9 +81,10 @@ server <- function(input, output) {
     sd <- isolate(input$sd)
     tMOE <- isolate(input$tMOE)
     assu <- isolate(input$assu)
-    
-    output$ans <- "BLABLABLA"
-  }) #end observeEvent2 
+    answer = "Whaaaat??"
+    output$ans <- renderPrint(answer)
+  
+    }) #end observeEvent2 
     
   }# end server
   
