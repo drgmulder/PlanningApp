@@ -13,7 +13,7 @@ library(shiny)
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Generate normal variable"),
+  titlePanel("Sample size planning"),
   
   # Sidebar with input fields for specification of
   # population
