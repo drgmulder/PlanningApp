@@ -99,7 +99,7 @@ server <- function(input, output) {
     cost = function(n, tMOE) {
       cost = (calcMOE.assu(n, sd = sd, assu=assu) - tMOE)^2
     }
-    answer = c(optimize(cost, interval=c(20, 5000), tMOE=tMOE)$minimum, tMOE, (1.96/.5)^2*2)
+    answer = optimize(cost, interval=c(20, 5000), tMOE=tMOE)$minimum
     output$ans <- renderPrint(answer)
   
     }) #end observeEvent2 
