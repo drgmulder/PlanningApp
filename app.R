@@ -9,61 +9,65 @@
 
 library(shiny)
 
-# Define UI for application that draws a histogram
+# Define UI 
 ui <- fluidPage(
-   
-   # Application title
-   titlePanel("Generate normal variable"),
-   
-   # Sidebar with a slider input for number of bins 
-   sidebarLayout(
-      sidebarPanel(
-        numericInput("mu1", 
-                     "Mean population 1:", 
-                     100,
-                     min = 1,
-                     max = 1000),
-         numericInput("mu2",
-                     "Mean population 2:",
-                     100,
-                     min = 1,
-                     max = 1000),
-         numericInput("sd",
-                     "Set population sd:",
-                     min = 5,
-                     max = 25,
-                     value=15),
-        actionButton("draw", "Draw Populations")
-               ),
-        
-      
-      # Show a plot of the generated distribution
-      mainPanel(
-         plotOutput("distPlot")
-      )
-   )
-)
+  
+  # Application title
+  titlePanel("Generate normal variable"),
+  
+  # Sidebar with input fields for specification of
+  # population
+  fluidRow(column(4, 
+                  wellPanel(strong("Set population values"), p(),
+                            numericInput("mu1", 
+                                         "Mean population 1:", 
+                                         100,
+                                         min = 1,
+                                         max = 1000),
+                            numericInput("mu2",
+                                         "Mean population 2:",
+                                         100,
+                                         min = 1,
+                                         max = 1000),
+                            numericInput("sd",
+                                         "Population sd:",
+                                         min = 5,
+                                         max = 25,
+                                         value=15),
+                            actionButton("draw", "Set values")
+                            
+                  )),
+           column(8,
+                  plotOutput("distPlot")) #end column
+           
+  ), #end first fluidRow
+  #add panel for PFP
+  fluidRow(column(4,
+                  wellPanel(strong("Sample size planning"), p(),
+                            numericInput("tMOE", "Target MOE:", value=0.5),
+                            numericInput("assu", "Assurance:", value=.80, min = 0, max=.99),
+                            actionButton("plan", "Get sample sizes")
+                            
+                  ) #end panel
+  ) #end first column 
+  
+  ) #end second fluidRow
+) #end fluidPage
 
-# Define server logic required to draw a histogram
+# Define server logic 
 server <- function(input, output) {
-   observeEvent(input$draw, {
-     mu1 <- isolate(input$mu1)
-     mu2 <- isolate(input$mu2)
-     sd <- isolate(input$sd)
-     x <- seq(-4*sd+mu1, 4*sd+mu2, length=200)
-     output$distPlot <- renderPlot({
-       plot(x, dnorm(x, mu1, sd), type="l")
-       points(x, dnorm(x, mu2, sd), type="l", lty=3)
-     })
-   })
-   # output$distPlot <- renderPlot({
-   #    # generate bins based on input$bins from ui.R
-   #    x    <- seq()
-   #          # draw the histogram with the specified number of bins
-   #    plot(density(x))
-   # })
+  observeEvent(input$draw, {
+    mu1 <- isolate(input$mu1)
+    mu2 <- isolate(input$mu2)
+    sd <- isolate(input$sd)
+    x <- seq(-4*sd+mu1, 4*sd+mu2, length=200)
+    output$distPlot <- renderPlot({
+      plot(x, dnorm(x, mu1, sd), type="l", main="Populations")
+      points(x, dnorm(x, mu2, sd), type="l", lty=3)
+    })
+  })
+  
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
