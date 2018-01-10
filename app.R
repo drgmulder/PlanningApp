@@ -13,7 +13,7 @@ library(shiny)
 ui <- fluidPage(
    
    # Application title
-   titlePanel("Planning for Precision"),
+   titlePanel("Generate normal variable"),
    
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
@@ -22,8 +22,19 @@ ui <- fluidPage(
                      "Set population mean:",
                      min = 50,
                      max = 150,
+                     value = 100),
+         sliderInput("sd",
+                     "Set population sd:",
+                     min = 5,
+                     max = 25,
+                     value=15),
+         sliderInput("n",
+                     "Set sample size:",
+                     min = 2,
+                     max = 500,
                      value = 100)
       ),
+      
       
       # Show a plot of the generated distribution
       mainPanel(
@@ -37,7 +48,7 @@ server <- function(input, output) {
    
    output$distPlot <- renderPlot({
       # generate bins based on input$bins from ui.R
-      x    <- rnorm(100, input$mean, 15)
+      x    <- rnorm(input$n, input$mean, input$sd)
             # draw the histogram with the specified number of bins
       plot(density(x))
    })
