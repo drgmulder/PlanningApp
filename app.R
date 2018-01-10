@@ -14,7 +14,7 @@ library(multicon)
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Sample size planning"),
+  titlePanel("Sample size planning for two independent groups"),
   
   # Sidebar with input fields for specification of
   # population
@@ -93,7 +93,7 @@ server <- function(input, output) {
                                      type="l", 
                                      ylab="Density", 
                                      main="Populations")
-                                points(x, dnorm(x, 107.5, 15), lty=3, type="l")})
+                                points(x, dnorm(x, 107.5, 15), lty=3, type="l")}, height=400, width=600)
   #wait for setting population values and update plot
   observeEvent(input$draw, {
     mu1 <- isolate(input$mu1)
@@ -103,7 +103,7 @@ server <- function(input, output) {
     output$distPlot <- renderPlot({
       plot(x, dnorm(x, mu1, sd), type="l", main="Populations", ylab="Density")
       points(x, dnorm(x, mu2, sd), type="l", lty=3)
-    }) #end renderPlot
+    }, height=400, width=600) #end renderPlot
   }) #end observeEvent
   
   observeEvent(input$plan, {
@@ -128,7 +128,7 @@ server <- function(input, output) {
     output$sampDist <- renderPlot(plot(x, dnorm(x, diff, se),
                                        ylab="Density",
                                        xlab="Sample difference between means",
-                                       main="Sampling Distribution of Difference"))
+                                       main="Sampling Distribution of Difference"), height=400, width=600)
     
     g1 <- rnorm(ceiling(answer))
     g1 <- g1*sd + mu1
@@ -136,7 +136,7 @@ server <- function(input, output) {
     dep <- c(g1, g2)
     ind <- rep(c(1, 2), each=length(g1))
     
-    output$expResults <- renderPlot(diffPlot(ind, dep, xlab=""))
+    output$expResults <- renderPlot(diffPlot(ind, dep, xlab=""), height=400, width=600)
   
     }) #end observeEvent2 
     
