@@ -119,7 +119,8 @@ server <- function(input, output) {
       cost = (calcMOE.assu(n, sd = sd, assu=assu) - tMOE)^2
     }
     answer = optimize(cost, interval=c(20, 5000), tMOE=tMOE)$minimum
-    output$ans <- renderPrint(answer)
+    se = sqrt(2*sd^2/ceiling(answer))
+    output$ans <- renderPrint(c(answer, mu1, mu2, sd, tMOE, assu, se))
     diff = abs(isolate(input$mu1 - input$mu2))
     se = sqrt(2*sd^2/ceiling(answer))
     x = seq(-4, 4, length=200)
@@ -128,10 +129,11 @@ server <- function(input, output) {
     output$sampDist <- renderPlot(plot(x, dnorm(x, diff, se),
                                        ylab="Density",
                                        xlab="Sample difference between means",
-                                       main="Sampling Distribution of Difference"), height=400, width=600)
+                                       main="Sampling Distribution of Difference",
+                                       type="l"), height=400, width=600)
     
     g1 <- rnorm(ceiling(answer))
-    g1 <- g1*sd + mu1
+    g1 <- unname(scale(g1)*sd + mu1)
     g2 <- g1 + diff
     dep <- c(g1, g2)
     ind <- rep(c(1, 2), each=length(g1))
