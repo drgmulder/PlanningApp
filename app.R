@@ -119,12 +119,20 @@ server <- function(input, output) {
       cost = (calcMOE.assu(n, sd = sd, assu=assu) - tMOE)^2
     }
     answer = optimize(cost, interval=c(20, 5000), tMOE=tMOE)$minimum
-    se = sqrt(2*sd^2/ceiling(answer))
-    output$ans <- renderPrint(c(answer, mu1, mu2, sd, tMOE, assu, se))
+    
     diff = abs(isolate(input$mu1 - input$mu2))
     se = sqrt(2*sd^2/ceiling(answer))
+    ncp = diff/se
+    df = 2*ceiling(answer) - 2
+    pow = (1 - pt(qt(.975, df), df, ncp)) + pt(qt(.025, df), df, ncp)
+    eMOE = calcMOE(ceiling(answer), sd)
+    
+    output$ans <- renderPrint(c("Sample size:"=answer, "Expected Moe:"=eMOE, "Power"=pow))
+    
+    
     x = seq(-4, 4, length=200)
     x = x*se + diff
+     
     
     output$sampDist <- renderPlot(plot(x, dnorm(x, diff, se),
                                        ylab="Density",
