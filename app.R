@@ -156,7 +156,7 @@ server <- function(input, output) {
     
   }) #end observeEvent
   
-  observeEvent(input$plan, {
+  observeEvent(input$plan, { #this happens when sample size planning button is pushed
     mu1 <- isolate(input$mu1)
     mu2 <- isolate(input$mu2)
     sd <- isolate(input$sd)
@@ -169,6 +169,12 @@ server <- function(input, output) {
       cost = (calcMOE.assu(n, sd = sd, assu=assu) - tMOE)^2
     }
     answer = optimize(cost, interval=c(20, 5000), tMOE=tMOE)$minimum
+    
+    #update the sample size in population pane:
+    
+    updateNumericInput(session, "sampleSize", value=ceiling(answer))
+    
+    
     
     diff = abs(isolate(input$mu1 - input$mu2))
     d = diff/sd
