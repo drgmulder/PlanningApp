@@ -35,15 +35,20 @@ ui <- fluidPage(
                                          min = 1,
                                          max = 25,
                                          value=1),
+                            numericInput("sampleSize",
+                                         "Sample size:", 
+                                         min = 20,
+                                         max = 5000,
+                                         value = 20),
                             actionButton("draw", "Set values")
                             
-                  )),
+                  )), #end fist column
            column(8, tabsetPanel(
              tabPanel("Population", plotOutput("distPlot")),
              tabPanel("Sampling Distribution", plotOutput("sampDist")),
              tabPanel("Distribution of t", plotOutput("tDist"))
            ) #end tabsetPanel
-                  ) #end column
+                  ) #end second column
            
   ), #end first fluidRow
   #add panel for PFP
@@ -84,27 +89,71 @@ calcMOE.assu <- function(n, sd, assu) {
 # Define server logic 
 
 server <- function(input, output) {
-  mu1 = 100
-  mu2 = 100
-  sd = 15
-  x <- seq(-4*sd+mu1, 4*sd+mu2, length=200)
+  mu1 = 0
+  mu2 = 0.5
+  sd = 1
+  n = 20 
+  se = sqrt(2/n)*sd
+  df = 2*(n - 1)
+  ncp = .5/se
+  
+  x <- seq(-4, 4, length=200)
   
   output$distPlot <- renderPlot({plot(x, 
-                                     dnorm(x, 100, 15), 
+                                     dnorm(x, 0, 1), 
                                      type="l", 
                                      ylab="Density", 
                                      main="Populations")
-                                points(x, dnorm(x, 107.5, 15), lty=3, type="l")}, height=400, width=600)
+                                points(x, dnorm(x, mean=.5, sd=1), lty=3, type="l")}, height=400, width=600)
+  
+  diffs <- seq(0.5-4*se, 0.5+4*se, length=200)
+  
+  output$sampDist <- renderPlot({plot(diffs, dnorm(diffs, 0.5, se), type="l", main="Sampling Distribution of Difference", 
+                                      ylab="Density", xlab="Sample means difference")
+                      abline(v = 0.5, lty=3)
+                        }, height=400, width=600) #end RenderPlot Sampling Distribution
+  
+  t <- seq(ncp-4, ncp+4, length=100)
+  
+  output$tDist <- renderPlot({plot(t, dt(t, df, ncp), type="l", ylab="Density")
+    abline(v=c(qt(.025, df), qt(.975, df)), lty=3) 
+  }, height=400, width=600)
+  
+  
   #wait for setting population values and update plot
   observeEvent(input$draw, {
     mu1 <- isolate(input$mu1)
     mu2 <- isolate(input$mu2)
     sd <- isolate(input$sd)
+    n <- isolate(input$sampleSize)
+    
+  
+    se = sqrt(2/n)*sd
+    diff = abs(mu2 - mu1)
+    ncp = diff/se
+    df = 2*(n - 1)
+    
     x <- seq(-4*sd+mu1, 4*sd+mu2, length=200)
+    
     output$distPlot <- renderPlot({
       plot(x, dnorm(x, mu1, sd), type="l", main="Populations", ylab="Density")
       points(x, dnorm(x, mu2, sd), type="l", lty=3)
     }, height=400, width=600) #end renderPlot
+    
+    diffs <- seq(diff-4*se, diff+4*se, length=200) #not a great idea to use vars diff and diffs...
+    
+    output$sampDist <- renderPlot({plot(diffs, dnorm(diffs, diff, se), type="l", main="Sampling Distribution of Difference", 
+                                        ylab="Density", xlab="Sample means difference")
+      abline(v = diff, lty=3)
+    }, height=400, width=600) #end RenderPlot Sampling Distribution
+    
+    t <- seq(ncp-4, ncp+4, length=200)
+    
+    output$tDist <- renderPlot({plot(t, dt(t, df, ncp), type="l", ylab="Density")
+      abline(v=c(qt(.025, df), qt(.975, df)), lty=3) 
+    }, height=400, width=600)
+    
+    
   }) #end observeEvent
   
   observeEvent(input$plan, {
