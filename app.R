@@ -22,25 +22,26 @@ ui <- fluidPage(
                   wellPanel(strong("Set population values"), p(),
                             numericInput("mu1", 
                                          "Mean population 1:", 
-                                         100,
-                                         min = 1,
+                                         0,
+                                         min = 0,
                                          max = 1000),
                             numericInput("mu2",
                                          "Mean population 2:",
-                                         107.5,
-                                         min = 1,
+                                         0.5,
+                                         min = 0,
                                          max = 1000),
                             numericInput("sd",
                                          "Population sd:",
-                                         min = 5,
+                                         min = 1,
                                          max = 25,
-                                         value=15),
+                                         value=1),
                             actionButton("draw", "Set values")
                             
                   )),
            column(8, tabsetPanel(
              tabPanel("Population", plotOutput("distPlot")),
-             tabPanel("Sampling Distribution", plotOutput("sampDist"))
+             tabPanel("Sampling Distribution", plotOutput("sampDist")),
+             tabPanel("Distribution of t", plotOutput("tDist"))
            ) #end tabsetPanel
                   ) #end column
            
@@ -121,13 +122,14 @@ server <- function(input, output) {
     answer = optimize(cost, interval=c(20, 5000), tMOE=tMOE)$minimum
     
     diff = abs(isolate(input$mu1 - input$mu2))
+    d = diff/sd
     se = sqrt(2*sd^2/ceiling(answer))
     ncp = diff/se
     df = 2*ceiling(answer) - 2
     pow = (1 - pt(qt(.975, df), df, ncp)) + pt(qt(.025, df), df, ncp)
     eMOE = calcMOE(ceiling(answer), sd)
     
-    output$ans <- renderPrint(c("Sample size:"=answer, "Expected Moe:"=eMOE, "Power"=pow))
+    output$ans <- renderPrint(c("Sample size:"=answer, "Expected Moe:"=eMOE, "Power:"=pow, "Cohen's d:"=d ))
     
     
     x = seq(-4, 4, length=200)
@@ -139,6 +141,10 @@ server <- function(input, output) {
                                        xlab="Sample difference between means",
                                        main="Sampling Distribution of Difference",
                                        type="l"), height=400, width=600)
+    t <- seq(ncp-4, ncp+4, length=100)
+    output$tDist <- renderPlot({plot(t, dt(t, df, ncp), type="l", ylab="Density")
+     abline(v=c(qt(.025, df), qt(.975, df)), lty=3) 
+    }, height=400, width=600)
     
     g1 <- rnorm(ceiling(answer))
     g1 <- unname(scale(g1)*sd + mu1)
@@ -146,7 +152,7 @@ server <- function(input, output) {
     dep <- c(g1, g2)
     ind <- rep(c(1, 2), each=length(g1))
     
-    output$expResults <- renderPlot(diffPlot(ind, dep, xlab=""), height=400, width=600)
+    output$expResults <- renderPlot(diffPlot(ind, dep, xlab="", grp.names=c("Control", "Experimental")), height=400, width=600)
   
     }) #end observeEvent2 
     
