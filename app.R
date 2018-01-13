@@ -169,12 +169,7 @@ server <- function(input, output) {
       cost = (calcMOE.assu(n, sd = sd, assu=assu) - tMOE)^2
     }
     answer = optimize(cost, interval=c(20, 5000), tMOE=tMOE)$minimum
-    
-    #update the sample size in population pane:
-    
-    updateNumericInput(session, "sampleSize", value=ceiling(answer))
-    
-    
+     
     
     diff = abs(isolate(input$mu1 - input$mu2))
     d = diff/sd
