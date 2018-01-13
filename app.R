@@ -68,7 +68,7 @@ ui <- fluidPage(
   ) #end second fluidRow
 ) #end fluidPage
 
-#define planning functions
+#define planning functions (move to global)
 
 #Margin of Error
 calcMOE <- function(n, sd) {
