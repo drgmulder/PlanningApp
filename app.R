@@ -50,14 +50,14 @@ ui <- fluidPage(
   #add panel for PFP
   fluidRow(column(4,
                   wellPanel(strong("Sample size planning"), p(),
-                            numericInput("tMOE", "Target MOE (fraction of sd):", value=0.5, min = .01),
+                            numericInput("tMOE", "Target MOE (fraction of sd; f):", value=0.5, min = .01),
                             numericInput("assu", "Assurance:", value=.80, min = 0, max=.99),
                             actionButton("plan", "Get sample sizes")
                             
                   ) #end panel
   ), #end first column 
   column(8, tabsetPanel(
-    tabPanel("Required Sample size", verbatimTextOutput("ans")),
+    tabPanel("Planning Results", verbatimTextOutput("ans")),
     tabPanel("Expected Results", plotOutput("expResults"))
   ) # end tabsetPanel
   ) # end column
@@ -92,6 +92,8 @@ server <- function(input, output) {
   se = sqrt(2/n)*sd
   df = 2*(n - 1)
   ncp = .5/se
+  ct <- qt(.975, df) #critical value of t (testing diff = 0)
+  
   
   x <- seq(-4, 4, length=200)
   
@@ -115,11 +117,12 @@ server <- function(input, output) {
   output$sampDist <- renderPlot({plot(diffs, dnorm(diffs, 0.5, se), type="l", main="Sampling Distribution of Difference", 
                                       ylab="Density", xlab="Sample means difference")
                       abline(v = 0.5, lty=3)
+                      abline(v = c(0.5-ct*se, 0.5+ct*se), lty=3)
                         }, height=400, width=600) #end RenderPlot Sampling Distribution
   
   t <- seq(ncp-4, ncp+4, length=100)
   
-  output$tDist <- renderPlot({plot(t, dt(t, df, ncp), type="l", ylab="Density")
+  output$tDist <- renderPlot({plot(t, dt(t, df, ncp), type="l", ylab="Density", main="Testing zero population mean difference")
     abline(v=c(qt(.025, df), qt(.975, df)), lty=3) 
   }, height=400, width=600)
   
@@ -149,11 +152,12 @@ server <- function(input, output) {
     output$sampDist <- renderPlot({plot(diffs, dnorm(diffs, diff, se), type="l", main="Sampling Distribution of Difference", 
                                         ylab="Density", xlab="Sample mean difference")
       abline(v = diff, lty=3)
+      abline(v = c(diff-qt(.975, df)*se, diff+qt(.975, df)*se), lty=3)
     }, height=400, width=600) #end RenderPlot Sampling Distribution
     
     t <- seq(ncp-4, ncp+4, length=200)
     
-    output$tDist <- renderPlot({plot(t, dt(t, df, ncp), type="l", ylab="Density")
+    output$tDist <- renderPlot({plot(t, dt(t, df, ncp), type="l", ylab="Density", main="Testing zero population mean difference")
       abline(v=c(qt(.025, df), qt(.975, df)), lty=3) 
     }, height=400, width=600)
     
@@ -181,7 +185,7 @@ server <- function(input, output) {
     ncp = diff/se
     df = 2*ceiling(answer) - 2
     pow = (1 - pt(qt(.975, df), df, ncp)) + pt(qt(.025, df), df, ncp)
-    eMOE = calcMOE(ceiling(answer), sd)
+    eMOE = calcMOE(ceiling(answer), sd)/sd #in terms of f 
     
     
     output$setSampleSize <- renderUI({
@@ -193,21 +197,23 @@ server <- function(input, output) {
     }) #end renderUI
     
     
-    output$ans <- renderPrint(c("Sample size:"=answer, "Expected Moe:"=eMOE, "Power:"=pow, "Cohen's d:"=d ))
+    output$ans <- renderPrint(c("Sample size:"=answer, "Expected Moe (f):"=eMOE, "Power:"=pow, "Cohen's d:"=d ))
     
     
     x = seq(-4, 4, length=200)
     x = x*se + diff
      
     
-    output$sampDist <- renderPlot(plot(x, dnorm(x, diff, se),
+    output$sampDist <- renderPlot({plot(x, dnorm(x, diff, se),
                                        ylab="Density",
                                        xlab="Sample mean difference",
                                        main="Sampling Distribution of Difference",
-                                       type="l"), height=400, width=600)
+                                       type="l")
+                                  abline(v=c(diff, diff-qt(.975, df)*se, diff+qt(.975, df)*se), lty=3)
+                                   }, height=400, width=600)
     
-    t <- seq(ncp-4, ncp+4, length=100)
-    output$tDist <- renderPlot({plot(t, dt(t, df, ncp), type="l", ylab="Density")
+    t <- seq(ncp-4, ncp+4, length=200)
+    output$tDist <- renderPlot({plot(t, dt(t, df, ncp), type="l", ylab="Density", main="Testing zero population mean difference")
      abline(v=c(qt(.025, df), qt(.975, df)), lty=3) 
     }, height=400, width=600)
     
