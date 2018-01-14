@@ -35,12 +35,8 @@ ui <- fluidPage(
                                          min = 1,
                                          max = 25,
                                          value=1),
-                            numericInput("sampleSize",
-                                         "Sample size:", 
-                                         min = 20,
-                                         max = 5000,
-                                         value = 20),
-                            actionButton("draw", "Set values")
+                            uiOutput('setSampleSize'),
+                           actionButton("draw", "Set values")
                             
                   )), #end fist column
            column(8, tabsetPanel(
@@ -54,7 +50,7 @@ ui <- fluidPage(
   #add panel for PFP
   fluidRow(column(4,
                   wellPanel(strong("Sample size planning"), p(),
-                            numericInput("tMOE", "Target MOE:", value=0.5, min = .01),
+                            numericInput("tMOE", "Target MOE (fraction of sd):", value=0.5, min = .01),
                             numericInput("assu", "Assurance:", value=.80, min = 0, max=.99),
                             actionButton("plan", "Get sample sizes")
                             
@@ -98,6 +94,14 @@ server <- function(input, output) {
   ncp = .5/se
   
   x <- seq(-4, 4, length=200)
+  
+  output$setSampleSize <- renderUI({
+    numericInput("sampleSize",
+                 "Sample size:", 
+                 min = 20,
+                 max = 5000,
+                 value = 20)
+  }) #end renderUI
   
   output$distPlot <- renderPlot({plot(x, 
                                      dnorm(x, 0, 1), 
@@ -143,7 +147,7 @@ server <- function(input, output) {
     diffs <- seq(diff-4*se, diff+4*se, length=200) #not a great idea to use vars diff and diffs...
     
     output$sampDist <- renderPlot({plot(diffs, dnorm(diffs, diff, se), type="l", main="Sampling Distribution of Difference", 
-                                        ylab="Density", xlab="Sample means difference")
+                                        ylab="Density", xlab="Sample mean difference")
       abline(v = diff, lty=3)
     }, height=400, width=600) #end RenderPlot Sampling Distribution
     
@@ -179,6 +183,16 @@ server <- function(input, output) {
     pow = (1 - pt(qt(.975, df), df, ncp)) + pt(qt(.025, df), df, ncp)
     eMOE = calcMOE(ceiling(answer), sd)
     
+    
+    output$setSampleSize <- renderUI({
+      numericInput("sampleSize",
+                   "Sample size:", 
+                   min = 20,
+                   max = 5000,
+                   value = ceiling(answer))
+    }) #end renderUI
+    
+    
     output$ans <- renderPrint(c("Sample size:"=answer, "Expected Moe:"=eMOE, "Power:"=pow, "Cohen's d:"=d ))
     
     
@@ -188,9 +202,10 @@ server <- function(input, output) {
     
     output$sampDist <- renderPlot(plot(x, dnorm(x, diff, se),
                                        ylab="Density",
-                                       xlab="Sample difference between means",
+                                       xlab="Sample mean difference",
                                        main="Sampling Distribution of Difference",
                                        type="l"), height=400, width=600)
+    
     t <- seq(ncp-4, ncp+4, length=100)
     output$tDist <- renderPlot({plot(t, dt(t, df, ncp), type="l", ylab="Density")
      abline(v=c(qt(.025, df), qt(.975, df)), lty=3) 
